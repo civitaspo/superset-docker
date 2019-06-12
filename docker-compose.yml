@@ -1,0 +1,56 @@
+version: '3'
+
+networks:
+  superset:
+    driver: bridge
+
+services:
+
+  redis:
+    image: redis:5
+    restart: unless-stopped
+    hostname: redis
+    networks:
+      - superset
+    ports:
+      - 6379:6379
+    expose:
+      - 6379
+
+  postgres:
+    image: postgres:12
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_USER: superset
+    hostname: postgres
+    networks:
+      - superset
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+
+  superset:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    restart: unless-stopped
+    hostname: superset
+    ports:
+      - 8088:8088
+    networks:
+      - superset
+    depends_on:
+      - postgres
+      - redis
+
